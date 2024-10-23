@@ -1,5 +1,7 @@
 package currency
 
+import "fmt"
+
 type CurrencyType struct {
 	ConversionFactor float64
 }
@@ -20,19 +22,19 @@ func (c CurrencyType) FromBase(value float64) float64 {
 	return value / c.ConversionFactor
 }
 
-func GetCurrencyType(currency string) CurrencyType {
+func GetCurrencyType(currency string) (CurrencyType, error) {
 	switch currency {
 	case "USD":
-		return USD
+		return USD, nil
 	case "EUR":
-		return EUR
+		return EUR, nil
 	case "GBP":
-		return GBP
+		return GBP, nil
 	case "JPY":
-		return JPY
+		return JPY, nil
 	case "INR":
-		return INR
+		return INR, nil
 	default:
-		return INR
+		return CurrencyType{}, fmt.Errorf("invalid currency: %s", currency)
 	}
 }

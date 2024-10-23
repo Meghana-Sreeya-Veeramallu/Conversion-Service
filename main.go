@@ -19,12 +19,18 @@ type server struct {
 func (s *server) Convert(_ context.Context, request *pb.ConvertRequest) (*pb.ConvertResponse, error) {
 
 	if request.Amount <= 0 {
-
 		return nil, fmt.Errorf("invalid amount: %v. Must be greater than 0", request.Amount)
 	}
 
-	fromCurrency := currency.GetCurrencyType(request.FromCurrency)
-	toCurrency := currency.GetCurrencyType(request.ToCurrency)
+	fromCurrency, err := currency.GetCurrencyType(request.FromCurrency)
+	if err != nil {
+		return nil, err
+	}
+
+	toCurrency, err := currency.GetCurrencyType(request.ToCurrency)
+	if err != nil {
+		return nil, err
+	}
 
 	baseValue := fromCurrency.ToBase(request.Amount)
 	convertedAmount := toCurrency.FromBase(baseValue)

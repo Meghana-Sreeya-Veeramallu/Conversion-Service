@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"google.golang.org/grpc/status"
 	"log"
 	"math"
 	"testing"
@@ -92,18 +93,18 @@ func TestConvertInvalidCurrencies(t *testing.T) {
 	client := pb.NewConversionServiceClient(conn)
 
 	tests := []struct {
-		fromCurrency string
-		toCurrency   string
-		amount       float64
-		expected     float64
+		fromCurrency  string
+		toCurrency    string
+		amount        float64
+		expectedError string
 	}{
-		{"INVALID", "INR", 100, 100},
-		{"INR", "INVALID", 100, 100},
-		{"INVALID", "INVALID", 100, 100},
-		{"USD", "INVALID", 100, 8400},
-		{"INVALID", "USD", 8400, 100},
-		{"EUR", "INVALID", 100, 9100.00},
-		{"INVALID", "EUR", 100, 1.09},
+		{"RAN", "INR", 100, "invalid currency: RAN"},
+		{"INR", "RAN", 100, "invalid currency: RAN"},
+		{"RAN", "RAN", 100, "invalid currency: RAN"},
+		{"USD", "RAN", 100, "invalid currency: RAN"},
+		{"RAN", "USD", 8400, "invalid currency: RAN"},
+		{"EUR", "RAN", 100, "invalid currency: RAN"},
+		{"RAN", "EUR", 100, "invalid currency: RAN"},
 	}
 
 	for _, test := range tests {
@@ -112,17 +113,22 @@ func TestConvertInvalidCurrencies(t *testing.T) {
 			ToCurrency:   test.toCurrency,
 			Amount:       test.amount,
 		}
-		resp, err := client.Convert(ctx, req)
-		if err != nil {
-			t.Fatalf("Convert(%v) failed: %v", req, err)
-		}
-		if !floatEqual(resp.ConvertedAmount, test.expected) {
-			t.Errorf("Convert(%v) = %v; want %v", req, resp.ConvertedAmount, test.expected)
+		_, err := client.Convert(ctx, req)
+		if err == nil {
+			t.Errorf("Convert(%v) = nil; want error", req)
+		} else {
+			if status, ok := status.FromError(err); ok {
+				if status.Message() != test.expectedError {
+					t.Errorf("Convert(%v) = unexpected error: %v; want %v", req, status.Message(), test.expectedError)
+				}
+			} else {
+				t.Errorf("Convert(%v) = unexpected error: %v; want %v", req, err, test.expectedError)
+			}
 		}
 	}
 }
 
-func TestConvertException(t *testing.T) {
+func TestConvertInvalidAmountException(t *testing.T) {
 	ctx := context.Background()
 	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
