@@ -55,21 +55,30 @@ func TestFromBase(t *testing.T) {
 
 func TestGetCurrencyType(t *testing.T) {
 	tests := []struct {
-		code     string
-		expected CurrencyType
+		code      string
+		expected  CurrencyType
+		expectErr bool
 	}{
-		{"USD", USD},
-		{"EUR", EUR},
-		{"GBP", GBP},
-		{"JPY", JPY},
-		{"INR", INR},
-		{"XYZ", INR},
+		{"USD", USD, false},
+		{"EUR", EUR, false},
+		{"GBP", GBP, false},
+		{"JPY", JPY, false},
+		{"INR", INR, false},
+		{"XYZ", CurrencyType{}, true},
 	}
 
 	for _, test := range tests {
-		result := GetCurrencyType(test.code)
-		if result != test.expected {
-			t.Errorf("GetCurrencyType(%v) = %v; want %v", test.code, result, test.expected)
+		result, err := GetCurrencyType(test.code)
+		if test.expectErr {
+			if err == nil {
+				t.Errorf("GetCurrencyType(%v) = %v; want an error", test.code, result)
+			}
+		} else {
+			if err != nil {
+				t.Errorf("GetCurrencyType(%v) returned an error: %v; want %v", test.code, err, test.expected)
+			} else if result != test.expected {
+				t.Errorf("GetCurrencyType(%v) = %v; want %v", test.code, result, test.expected)
+			}
 		}
 	}
 }
