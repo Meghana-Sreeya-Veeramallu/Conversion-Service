@@ -5,6 +5,14 @@ import (
 	"testing"
 )
 
+func TestMain(m *testing.M) {
+	if err := LoadCurrencies("currencies.json"); err != nil {
+		panic(err)
+	}
+
+	m.Run()
+}
+
 const tolerance = 1e-9
 
 func floatEqual(a, b float64) bool {
@@ -17,11 +25,11 @@ func TestToBase(t *testing.T) {
 		value    float64
 		expected float64
 	}{
-		{USD, 100, 8400},
-		{EUR, 100, 9100},
-		{GBP, 100, 10900},
-		{JPY, 100, 55},
-		{INR, 100, 100},
+		{currencyMap["USD"], 100, 8400},
+		{currencyMap["EUR"], 100, 9100},
+		{currencyMap["GBP"], 100, 10900},
+		{currencyMap["JPY"], 100, 55},
+		{currencyMap["INR"], 100, 100},
 	}
 
 	for _, test := range tests {
@@ -38,11 +46,11 @@ func TestFromBase(t *testing.T) {
 		value    float64
 		expected float64
 	}{
-		{USD, 840, 10},
-		{EUR, 910, 10},
-		{GBP, 1090, 10},
-		{JPY, 5.5, 10},
-		{INR, 10, 10},
+		{currencyMap["USD"], 840, 10},
+		{currencyMap["EUR"], 910, 10},
+		{currencyMap["GBP"], 1090, 10},
+		{currencyMap["JPY"], 5.5, 10},
+		{currencyMap["INR"], 10, 10},
 	}
 
 	for _, test := range tests {
@@ -59,11 +67,11 @@ func TestGetCurrencyType(t *testing.T) {
 		expected  CurrencyType
 		expectErr bool
 	}{
-		{"USD", USD, false},
-		{"EUR", EUR, false},
-		{"GBP", GBP, false},
-		{"JPY", JPY, false},
-		{"INR", INR, false},
+		{"USD", currencyMap["USD"], false},
+		{"EUR", currencyMap["EUR"], false},
+		{"GBP", currencyMap["GBP"], false},
+		{"JPY", currencyMap["JPY"], false},
+		{"INR", currencyMap["INR"], false},
 		{"XYZ", CurrencyType{}, true},
 	}
 

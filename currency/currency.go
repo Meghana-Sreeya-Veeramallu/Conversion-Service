@@ -1,18 +1,38 @@
 package currency
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+)
 
 type CurrencyType struct {
-	ConversionFactor float64
+	ConversionFactor float64 `json:"conversion_factor"`
 }
 
-var (
-	USD = CurrencyType{ConversionFactor: 84.0}
-	EUR = CurrencyType{ConversionFactor: 91.0}
-	GBP = CurrencyType{ConversionFactor: 109.0}
-	JPY = CurrencyType{ConversionFactor: 0.55}
-	INR = CurrencyType{ConversionFactor: 1.0}
-)
+var currencyMap = make(map[string]CurrencyType)
+
+func LoadCurrencies(filename string) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	var config struct {
+		Currencies map[string]float64 `json:"currencies"`
+	}
+	if err := json.NewDecoder(file).Decode(&config); err != nil {
+		return err
+	}
+
+	currencyMap = make(map[string]CurrencyType)
+	for currency, factor := range config.Currencies {
+		currencyMap[currency] = CurrencyType{ConversionFactor: factor}
+	}
+
+	return nil
+}
 
 func (c CurrencyType) ToBase(value float64) float64 {
 	return value * c.ConversionFactor
@@ -23,18 +43,9 @@ func (c CurrencyType) FromBase(value float64) float64 {
 }
 
 func GetCurrencyType(currency string) (CurrencyType, error) {
-	switch currency {
-	case "USD":
-		return USD, nil
-	case "EUR":
-		return EUR, nil
-	case "GBP":
-		return GBP, nil
-	case "JPY":
-		return JPY, nil
-	case "INR":
-		return INR, nil
-	default:
+	c, exists := currencyMap[currency]
+	if !exists {
 		return CurrencyType{}, fmt.Errorf("invalid currency: %s", currency)
 	}
+	return c, nil
 }

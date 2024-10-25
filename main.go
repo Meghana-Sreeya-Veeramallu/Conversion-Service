@@ -17,6 +17,9 @@ type server struct {
 }
 
 func (s *server) Convert(_ context.Context, request *pb.ConvertRequest) (*pb.ConvertResponse, error) {
+	if err := currency.LoadCurrencies("currency/currencies.json"); err != nil {
+		log.Fatalf("failed to load currencies: %v", err)
+	}
 
 	if request.Amount <= 0 {
 		return nil, fmt.Errorf("invalid amount: %v. Must be greater than 0", request.Amount)
