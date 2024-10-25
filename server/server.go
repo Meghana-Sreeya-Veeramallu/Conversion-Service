@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 
@@ -17,26 +16,11 @@ type server struct {
 }
 
 func (s *server) Convert(_ context.Context, request *pb.ConvertRequest) (*pb.ConvertResponse, error) {
-	if err := currency.LoadCurrencies("currency/currencies.json"); err != nil {
-		log.Fatalf("failed to load currencies: %v", err)
-	}
-
-	if request.Amount <= 0 {
-		return nil, fmt.Errorf("invalid amount: %v. Must be greater than 0", request.Amount)
-	}
-
-	fromCurrency, err := currency.GetCurrencyType(request.FromCurrency)
+	convertedAmount, err := currency.ConvertCurrency(request.FromCurrency, request.ToCurrency, request.Amount)
 	if err != nil {
 		return nil, err
 	}
 
-	toCurrency, err := currency.GetCurrencyType(request.ToCurrency)
-	if err != nil {
-		return nil, err
-	}
-
-	baseValue := fromCurrency.ToBase(request.Amount)
-	convertedAmount := toCurrency.FromBase(baseValue)
 	return &pb.ConvertResponse{ConvertedAmount: convertedAmount}, nil
 }
 

@@ -49,3 +49,27 @@ func GetCurrencyType(currency string) (CurrencyType, error) {
 	}
 	return c, nil
 }
+
+func ConvertCurrency(fromCurrency string, toCurrency string, amount float64) (float64, error) {
+	if err := LoadCurrencies("../currency/currencies.json"); err != nil {
+		return 0, fmt.Errorf("failed to load currencies: %v", err)
+	}
+
+	if amount <= 0 {
+		return 0, fmt.Errorf("invalid amount: %v. Must be greater than 0", amount)
+	}
+
+	from, err := GetCurrencyType(fromCurrency)
+	if err != nil {
+		return 0, err
+	}
+
+	to, err := GetCurrencyType(toCurrency)
+	if err != nil {
+		return 0, err
+	}
+
+	baseValue := from.ToBase(amount)
+	convertedAmount := to.FromBase(baseValue)
+	return convertedAmount, nil
+}
