@@ -10,7 +10,13 @@ type CurrencyType struct {
 	ConversionFactor float64 `json:"conversion_factor"`
 }
 
-var currencyMap = make(map[string]CurrencyType)
+var (
+	USD CurrencyType
+	EUR CurrencyType
+	GBP CurrencyType
+	JPY CurrencyType
+	INR CurrencyType
+)
 
 func LoadCurrencies(filename string) error {
 	file, err := os.Open(filename)
@@ -26,9 +32,19 @@ func LoadCurrencies(filename string) error {
 		return err
 	}
 
-	currencyMap = make(map[string]CurrencyType)
 	for currency, factor := range config.Currencies {
-		currencyMap[currency] = CurrencyType{ConversionFactor: factor}
+		switch currency {
+		case "USD":
+			USD = CurrencyType{ConversionFactor: factor}
+		case "EUR":
+			EUR = CurrencyType{ConversionFactor: factor}
+		case "GBP":
+			GBP = CurrencyType{ConversionFactor: factor}
+		case "JPY":
+			JPY = CurrencyType{ConversionFactor: factor}
+		case "INR":
+			INR = CurrencyType{ConversionFactor: factor}
+		}
 	}
 
 	return nil
@@ -43,11 +59,20 @@ func (c CurrencyType) FromBase(value float64) float64 {
 }
 
 func GetCurrencyType(currency string) (CurrencyType, error) {
-	c, exists := currencyMap[currency]
-	if !exists {
+	switch currency {
+	case "USD":
+		return USD, nil
+	case "EUR":
+		return EUR, nil
+	case "GBP":
+		return GBP, nil
+	case "JPY":
+		return JPY, nil
+	case "INR":
+		return INR, nil
+	default:
 		return CurrencyType{}, fmt.Errorf("invalid currency: %s", currency)
 	}
-	return c, nil
 }
 
 func ConvertCurrency(fromCurrency string, toCurrency string, amount float64) (float64, error) {
